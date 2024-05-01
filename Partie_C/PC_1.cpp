@@ -20,34 +20,32 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
     config.routes = routes;
 
     //init test
-    config.server_name = "sitetest.com";
+    /*config.server_name = "sitetest.com";
     config.port = 3003;
-    config.client_max_body_size = 20480;
+    config.client_max_body_size = 20480;*/
 
-    config.error_pages[404] = "webpage/error_pages/error404.html";
-    config.error_pages[405] = "webpage/error_pages/error405.html";
+    //config.error_pages[404] = "webpage/error_pages/error404.html";
+    //config.error_pages[405] = "webpage/error_pages/error405.html";
 
-    std::map<std::string, std::string> details1;
+    /*std::map<std::string, std::string> details1;
     details1["index"] = "index.html";
     details1["methods"] = "GET POST";
     details1["root"] = "./webpage/sitetest/index.html";
-    config.routes["/"] = details1;
+    config.routes["/"] = details1;*/
 
-    std::map<std::string, std::string> details2;
+    /*std::map<std::string, std::string> details2;
     details2["methods"] = "GET";
     details2["redirection"] = "https://signin.intra.42.fr";
-    config.routes["intra42"] = details2;
-
-
+    config.routes["intra42"] = details2;*/
 
     init();
     status = 200;
 
-    size_t lastSlashPos = config.routes["/"]["root"].find_last_of("/");
-    basePath = config.routes["/"]["root"].substr(0, lastSlashPos);
+    //size_t lastSlashPos = config.routes["/"]["root"].find_last_of("/");
+    basePath = config.routes["/"]["root"];
 
     //-------------------- Partie Request --------------------
-    std::cout << "test\n";
+    std::cout << "----> BASEPATH : " << basePath <<"\n";
 
     const int bufferSize = 1024;
     char request_buffer[bufferSize] = {0};
@@ -62,6 +60,7 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
 
 
     std::cout << std::endl << std::endl << "-------------------> Request" << std::endl << request_buffer << std::endl;
+    std::cout << std::endl << std::endl << "-------------------> Request END\n\n";
 
     try
     {

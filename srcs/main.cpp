@@ -1,13 +1,9 @@
 #include <iostream>
-#include <csignal>
-#include "srcs/colors.hpp"
-#include "srcs/Configuration/ConfigCheck.hpp"
-#include "srcs/Configuration/ConfigParse.hpp"
-#include "srcs/Server/InitializeServer.hpp"
-#include "srcs/Server/Server.hpp"
-
-// Création d'une instance de serveur
-Server server;
+#include "colors.hpp"
+#include "Configuration/ConfigCheck.hpp"
+#include "Configuration/ConfigParse.hpp"
+#include "Server/InitializeServer.hpp"
+#include "Server/Server.hpp"
 
 void print_struct_vals(const std::vector<t_server>& servers)
 {
@@ -33,17 +29,6 @@ void print_struct_vals(const std::vector<t_server>& servers)
 	}
 }
 
-void signal_handler(int signal)
-{
-	if (signal == SIGINT || signal == SIGTERM)
-	{
-		std::cout << "Signal " << signal << " received. Shutting down server..." << std::endl;
-		// Arrêter le serveur
-		server.stop();
-		exit(0);
-	}
-}
-
 int main(int argc, char *argv[])
 {
 	std::string config_file;
@@ -64,19 +49,20 @@ int main(int argc, char *argv[])
 		std::cout << "--------------------------------------------------" << std::endl << std::endl;
 		print_struct_vals(parse.getServersParsed());
 		std::cout << "--------------------------------------------------" << std::endl << std::endl;
+		// Création d'une instance de serveur
+		Server server;
 
 		// Initialisation du serveur avec les données parsées du fichier de configuration
 		initializeServer(server, parse.getServersParsed());
-
-		// Gestionnaire de signal
-		signal(SIGINT, signal_handler);
-		signal(SIGTERM, signal_handler);
 
 		// Démarrage du serveur
 		server.start();
 
 		// Gestion des connexions entrantes
 		server.handleConnections();
+
+		// Arrêt du serveur
+		server.stop();
 	}
 	catch (std::exception &e)
 	{

@@ -123,6 +123,7 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
             std::cout << "\n-----> Body form not supported\n\n";
         }
     }
+    std::cout << "post_file_name : " << post_file_content << "\n";
     std::string body = potential_body;
 }
 
@@ -165,16 +166,20 @@ std::map<std::string, std::string>  Part_C::parseMultiPartBody(const std::string
     std::map<std::string, std::string> result;
 
 	std::string boundary = getMultiPartBoundary();
+    //std::cout << "xxx--- bodyline : " << bodyLines << "\n  end\n\n";
+    std::cout << "xxx--- boundary : " << boundary << "\n";
 
 	std::size_t start = bodyLines.find(boundary);
 	if (start == std::string::npos)
 	{
+        std::cout << "X no normal boundary\n";
 		status = 400; // Bad Request
 		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
 	}
 	std::size_t end = bodyLines.find(boundary+"--", start + boundary.length());
 	if (end == std::string::npos)
 	{
+        std::cout << "X no end boundary\n";
 		status = 400; // Bad Request
 		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
 	}
@@ -183,9 +188,14 @@ std::map<std::string, std::string>  Part_C::parseMultiPartBody(const std::string
 	std::string body = headers_and_body.substr(headers_and_body.find(std::string("\n") + std::string("\n")) + 2);
 	std::size_t filename_start = headers.find("filename=");
 
+    /*std::cout << "xxx--- headers : " << headers << "\n";
+    std::cout << "xxx--- body : " << body << "\n";
+    std::cout << "xxx--- filname : " << filename_start << "\n";*/
+
 
 	if (filename_start == std::string::npos)
 	{
+        std::cout << "X other bug\n";
 		status = 400; // Bad Request
 		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
 	}
@@ -205,9 +215,11 @@ std::map<std::string, std::string> Part_C::parseUrlEncoded(const std::string& da
     std::istringstream dataStream(data);
     std::string pair;
 
-    while (std::getline(dataStream, pair, '&')) {
+    while (std::getline(dataStream, pair, '&'))
+    {
         std::string::size_type delimiterPos = pair.find('=');
-        if (delimiterPos != std::string::npos) {
+        if (delimiterPos != std::string::npos)
+        {
             std::string key = pair.substr(0, delimiterPos);
             std::string value = pair.substr(delimiterPos + 1);
 
