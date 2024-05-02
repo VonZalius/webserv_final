@@ -15,7 +15,8 @@ void Part_C::method_POST()
 {
     std::cout << std::endl << "-------------------> POST" << std::endl;
 
-    std::string upload_path = basePath + "/" + post_file_name;
+    std::string upload_path = basePath + uri + "/" + post_file_name;
+    std::cout << std::endl << "upload_path : " << upload_path << std::endl;
 	if (checkFileExists(upload_path))
 	{
         std::cout << "-----upload_path : " << upload_path << "\n";

@@ -123,10 +123,10 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
         if(headers["Content-Type"].find("multipart/form-data") != std::string::npos)
         {
             std::cout << "\n-----> Body form multipart/form-data\n";
-            std::map<std::string, std::string> post_file_map = parseMultiPartBody(potential_body);
-            printMap(post_file_map);
+            /*std::map<std::string, std::string> post_file_map = */parseMultiPartBody(potential_body);
+            /*printMap(post_file_map);
             post_file_name = post_file_map["filename"];
-            post_file_content = post_file_map["content"];
+            post_file_content = post_file_map["content"];*/
         }
         else if(headers["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
         {
@@ -166,70 +166,66 @@ void Part_C::print_parse()
 
 std::string Part_C::getMultiPartBoundary()
 {
-	if (headers.find("Content-Type") == headers.end())
-	{
-		status = 400; // Bad Request
-		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
-	}
 	std::string content_type = headers.find("Content-Type")->second;
-	std::size_t start = content_type.find("boundary=");
+	std::string boundaryPrefix = "boundary=";
+    size_t boundaryPos = content_type.find(boundaryPrefix);
+    
+    if (boundaryPos == std::string::npos) {
+        throw std::runtime_error("Boundary delimiter not found in Content-Type");
+    }
+
+    boundaryPos += boundaryPrefix.length();
+    size_t boundaryEnd = content_type.find(";", boundaryPos);
+    
+    if (boundaryEnd == std::string::npos) {
+        // Boundary is at the end of the string
+        return content_type.substr(boundaryPos);
+    } else {
+        // Boundary ends before a semicolon
+        return content_type.substr(boundaryPos, boundaryEnd - boundaryPos);
+    }
+}
+
+void Part_C::parseMultiPartBody(std::string bodyLines)
+{
+    //std::cout << LOG_COLOR << "[LOG] " << RESET << "Content-Type: multipart/form-data" << std::endl;
+	std::string boundary = getMultiPartBoundary();
+    //std::string test = "123456789";
+
+	std::size_t start = bodyLines.find(boundary);
 	if (start == std::string::npos)
 	{
 		status = 400; // Bad Request
 		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
 	}
-	return ("--" + content_type.substr(start + 9));
-}
+    //std::cout << test + "XX\n";
 
-std::map<std::string, std::string>  Part_C::parseMultiPartBody(const std::string &bodyLines)
-{
-        std::map<std::string, std::string> result;
-    std::string boundary = getMultiPartBoundary();
-    
-    
-    size_t start = bodyLines.find(boundary);
-    if (start == std::string::npos) {
-        std::cout << "No normal boundary found.\n";
-        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - No Boundary");
-    }
+    boundary[boundary.length() - 1] = '-';
+    boundary[boundary.length()] = '-';
+    boundary[boundary.length() + 1] = '\0';
+    std::cout << boundary + "\n";
 
-    std::string boundaryEnd = boundary+"--";
-    std::cout << boundaryEnd << "\n";
-    size_t end = bodyLines.find(boundaryEnd, start + boundary.length());
-    if (end == std::string::npos) {
-        std::cout << "No end boundary found.\n";
-        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - No End Boundary");
-    }
+	std::size_t end = bodyLines.find(boundary);
+	if (end == std::string::npos)
+	{
+        std::cout << "no end boundary\n";
+		status = 400; // Bad Request
+		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
+	}
+	std::string headers_and_body = bodyLines.substr(start + boundary.length(), end - start - boundary.length());
+	std::string headers = headers_and_body.substr(0, headers_and_body.find(std::string("\r\n") + std::string("\r\n")));
+	std::string body = headers_and_body.substr(headers_and_body.find(std::string("\r\n") + std::string("\r\n")) + 4);
+	std::size_t filename_start = headers.find("name=");
+	if (filename_start == std::string::npos)
+	{
+        std::cout << "other\n";
+		status = 400; // Bad Request
+		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
+	}
+	std::size_t filename_end = headers.find('"', filename_start + 6);
+	post_file_name = headers.substr(filename_start + 6, filename_end - filename_start - 6);
 
-    std::string headers_and_body = bodyLines.substr(start + boundary.length(), end - start - boundary.length());
-    size_t headers_end = headers_and_body.find("\r\n\r\n");
-
-    if (headers_end == std::string::npos) {
-        std::cout << "Headers not properly terminated.\n";
-        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - Bad Headers");
-    }
-
-    std::string headers = headers_and_body.substr(0, headers_end);
-    std::string body = headers_and_body.substr(headers_end + 4);
-    size_t filename_start = headers.find("filename=\"");
-
-    if (filename_start == std::string::npos) {
-        std::cout << "Filename not found in headers.\n";
-        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - No Filename");
-    }
-
-    filename_start += 10; // Move past 'filename="'
-    size_t filename_end = headers.find('"', filename_start);
-
-    if (filename_end == std::string::npos) {
-        std::cout << "Filename closing quote not found.\n";
-        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - Filename Error");
-    }
-
-    result["filename"] = headers.substr(filename_start, filename_end - filename_start);
-    result["content"] = body.substr(0, body.length() - 2); // Assuming \r\n at the end of content
-
-    return result;
+	post_file_content = body.substr(0, body.length() - 2);
 }
 
 std::map<std::string, std::string> Part_C::parseUrlEncoded(const std::string& data)
