@@ -174,6 +174,7 @@ void Part_C::init()
 	_statusCodes[405] = "Method Not Allowed";
 	_statusCodes[409] = "Conflict";
 	_statusCodes[413] = "Payload Too Large";
+    _statusCodes[415] = "Unsupported Media Type";
 	_statusCodes[500] = "Internal Server Error";
 	_statusCodes[501] = "Not Implemented";
 	_statusCodes[505] = "HTTP Version Not Supported";

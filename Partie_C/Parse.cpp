@@ -23,6 +23,22 @@ bool isPathLengthValid(const std::string &path, size_t maxLength)
 
 //----------------------------------------------------------------------------------------------------------
 
+void printMap(const std::map<std::string, std::string>& post_file_map) {
+    // Vérification si la map est vide
+    if (post_file_map.empty()) {
+        std::cout << "The map is empty." << std::endl;
+        return;
+    }
+
+    // Déclaration d'un itérateur pour parcourir la map
+    std::map<std::string, std::string>::const_iterator it;
+
+    // Parcours de la map avec l'itérateur
+    for (it = post_file_map.begin(); it != post_file_map.end(); ++it) {
+        std::cout << "Key: " << it->first << " - Value: " << it->second << std::endl;
+    }
+}
+
 void Part_C::parse(const std::string& requestText, s_server2& config)
 {
     std::istringstream requestStream(requestText);
@@ -108,6 +124,7 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
         {
             std::cout << "\n-----> Body form multipart/form-data\n";
             std::map<std::string, std::string> post_file_map = parseMultiPartBody(potential_body);
+            printMap(post_file_map);
             post_file_name = post_file_map["filename"];
             post_file_content = post_file_map["content"];
         }
@@ -115,12 +132,15 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
         {
             std::cout << "\n-----> Body form application/x-www-form-urlencoded\n" << potential_body << std::endl;
             std::map<std::string, std::string> post_file_map = parseUrlEncoded(potential_body);
+            printMap(post_file_map);
             post_file_name = post_file_map["filename"];
             post_file_content = post_file_map["content"];
         }
         else
         {
             std::cout << "\n-----> Body form not supported\n\n";
+            status = 415;
+            throw Part_C::InvalidRequestException("Error Body 415");
         }
     }
     std::cout << "post_file_name : " << post_file_content << "\n";
@@ -163,50 +183,53 @@ std::string Part_C::getMultiPartBoundary()
 
 std::map<std::string, std::string>  Part_C::parseMultiPartBody(const std::string &bodyLines)
 {
-    std::map<std::string, std::string> result;
+        std::map<std::string, std::string> result;
+    std::string boundary = getMultiPartBoundary();
+    
+    
+    size_t start = bodyLines.find(boundary);
+    if (start == std::string::npos) {
+        std::cout << "No normal boundary found.\n";
+        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - No Boundary");
+    }
 
-	std::string boundary = getMultiPartBoundary();
-    //std::cout << "xxx--- bodyline : " << bodyLines << "\n  end\n\n";
-    std::cout << "xxx--- boundary : " << boundary << "\n";
+    std::string boundaryEnd = boundary+"--";
+    std::cout << boundaryEnd << "\n";
+    size_t end = bodyLines.find(boundaryEnd, start + boundary.length());
+    if (end == std::string::npos) {
+        std::cout << "No end boundary found.\n";
+        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - No End Boundary");
+    }
 
-	std::size_t start = bodyLines.find(boundary);
-	if (start == std::string::npos)
-	{
-        std::cout << "X no normal boundary\n";
-		status = 400; // Bad Request
-		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
-	}
-	std::size_t end = bodyLines.find(boundary+"--", start + boundary.length());
-	if (end == std::string::npos)
-	{
-        std::cout << "X no end boundary\n";
-		status = 400; // Bad Request
-		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
-	}
-	std::string headers_and_body = bodyLines.substr(start + boundary.length(), end - start - boundary.length());
-	std::string headers = headers_and_body.substr(0, headers_and_body.find(std::string("\n") + std::string("\n")));
-	std::string body = headers_and_body.substr(headers_and_body.find(std::string("\n") + std::string("\n")) + 2);
-	std::size_t filename_start = headers.find("filename=");
+    std::string headers_and_body = bodyLines.substr(start + boundary.length(), end - start - boundary.length());
+    size_t headers_end = headers_and_body.find("\r\n\r\n");
 
-    /*std::cout << "xxx--- headers : " << headers << "\n";
-    std::cout << "xxx--- body : " << body << "\n";
-    std::cout << "xxx--- filname : " << filename_start << "\n";*/
+    if (headers_end == std::string::npos) {
+        std::cout << "Headers not properly terminated.\n";
+        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - Bad Headers");
+    }
 
+    std::string headers = headers_and_body.substr(0, headers_end);
+    std::string body = headers_and_body.substr(headers_end + 4);
+    size_t filename_start = headers.find("filename=\"");
 
-	if (filename_start == std::string::npos)
-	{
-        std::cout << "X other bug\n";
-		status = 400; // Bad Request
-		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
-	}
-	std::size_t filename_end = headers.find('"', filename_start + 10);
+    if (filename_start == std::string::npos) {
+        std::cout << "Filename not found in headers.\n";
+        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - No Filename");
+    }
 
-    result["filename"] = headers.substr(filename_start + 10, filename_end - filename_start - 10);
-    result["content"] = body.substr(0, body.length() - 2);
+    filename_start += 10; // Move past 'filename="'
+    size_t filename_end = headers.find('"', filename_start);
 
-    //std::cout << "\n-----> TEST\n" << result["filename"] << "\n-\n" << result["content"] << std::endl;
+    if (filename_end == std::string::npos) {
+        std::cout << "Filename closing quote not found.\n";
+        throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400 - Filename Error");
+    }
 
-	return result;
+    result["filename"] = headers.substr(filename_start, filename_end - filename_start);
+    result["content"] = body.substr(0, body.length() - 2); // Assuming \r\n at the end of content
+
+    return result;
 }
 
 std::map<std::string, std::string> Part_C::parseUrlEncoded(const std::string& data)
