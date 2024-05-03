@@ -69,14 +69,14 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
 
     //-------------------- Partie Execution --------------------
 
-        if(isCGI())
+        if(method == "DELETE")
+            method_DELETE();
+        else if(isCGI())
             execute_cgi();
         else if(method == "GET")
             method_GET();
         else if(method == "POST")
             method_POST();
-        else if(method == "DELETE")
-            method_DELETE();
 
     }
 
@@ -88,7 +88,7 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
     //-------------------- Partie Response --------------------
 
      // Utilisez basePath de la configuration pour trouver les fichiers
-    std::string requestURI = uri == "/" ? config.routes["/"]["root"] : basePath + uri;
+    std::string requestURI = uri == "/" ? config.routes["/"]["root"] + "/" + config.routes["/"]["index"] : basePath + uri;
     std::string filePath = requestURI;
     std::ifstream fileStream(filePath.c_str());
     std::string httpResponse;

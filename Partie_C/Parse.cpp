@@ -110,6 +110,10 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
     }
 
     // Le reste est le corps de la requête
+    if(method == "DELETE")
+        return;
+
+
     std::istreambuf_iterator<char> begin(requestStream), end;
     std::string potential_body(begin, end);
 

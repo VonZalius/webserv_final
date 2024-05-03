@@ -79,7 +79,8 @@ void Part_C::execute_cgi()
         // Chemin absolu vers le script CGI
         //std::string path_ws = "/the_ultimate_webserv";
         std::string parentDir = getExecutableParentDir(); // Suppose que cette fonction retourne std::string
-        std::string scriptPath = parentDir + "/the_ultimate_webserv" + uri; // Concaténation correcte
+        std::string newBP = basePath.substr(1);
+        std::string scriptPath = parentDir + newBP + uri; // Concaténation correcte
         const char* cScriptPath = scriptPath.c_str();
 
         // Préparer les arguments pour execve
