@@ -1,6 +1,6 @@
 - server:
     server_name: sitetest.com
-    port: 3001
+    port: 3005
     client_max_body_size: 20k
     error_pages:
     - 404: webpage/error_pages/error404.html

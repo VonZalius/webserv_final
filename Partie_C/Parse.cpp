@@ -190,13 +190,73 @@ std::string Part_C::getMultiPartBoundary()
     }
 }
 
+struct FormData {
+    std::string headers;
+    std::string content;
+};
+
 void Part_C::parseMultiPartBody(std::string bodyLines)
 {
     //std::cout << LOG_COLOR << "[LOG] " << RESET << "Content-Type: multipart/form-data" << std::endl;
 	std::string boundary = getMultiPartBoundary();
     //std::string test = "123456789";
 
-	std::size_t start = bodyLines.find(boundary);
+    std::vector<FormData> formDataParts;
+    std::size_t pos = 0, lastPos = 0;
+
+    while ((pos = bodyLines.find(boundary, lastPos)) != std::string::npos) {
+        std::size_t endOfPart = bodyLines.find(boundary, pos + boundary.length());
+        if (endOfPart == std::string::npos) {
+            break;
+        }
+
+        // Trim the leading boundary and trailing new line
+        std::size_t partStart = pos + boundary.length() + 2; // Skip the boundary and the newline
+        std::size_t partEnd = endOfPart;
+
+        // Check if it's the last part
+        if (bodyLines.substr(partEnd, boundary.length() + 2) == boundary + "--") {
+            partEnd -= 2; // Adjust to avoid the '--' at the end of the last boundary
+        }
+
+        std::string part = bodyLines.substr(partStart, partEnd - partStart - 2); // Subtract 2 to remove the trailing CR LF
+
+        // Separate headers and content
+        std::size_t headerEnd = part.find("\r\n\r\n");
+        std::string headers = part.substr(0, headerEnd);
+        std::string content = part.substr(headerEnd + 4);
+
+        FormData formData;
+        formData.headers = headers;
+        formData.content = content;
+        formDataParts.push_back(formData);
+
+        lastPos = partEnd;
+    }
+
+    for (std::vector<FormData>::iterator it = formDataParts.begin(); it != formDataParts.end(); ++it) {
+        std::size_t fnPos = it->headers.find("filename=\"");
+        if (fnPos != std::string::npos) {
+            fnPos += 10; // Skip 'filename="'
+            std::size_t fnEnd = it->headers.find('"', fnPos);
+            if (fnEnd != std::string::npos) {
+                post_file_name = it->headers.substr(fnPos, fnEnd - fnPos);
+                post_file_content = it->content;
+            }
+        }
+    }
+
+    if (!post_file_name.empty()) {
+        std::cout << "XXX File Name: " << post_file_name << "\n";
+        std::cout << "XXX File Content:\n" << post_file_content << "\n";
+    }
+    else
+    {
+        status = 400; // Bad Request
+		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
+    }
+
+	/*std::size_t start = bodyLines.find(boundary);
 	if (start == std::string::npos)
 	{
 		status = 400; // Bad Request
@@ -219,17 +279,23 @@ void Part_C::parseMultiPartBody(std::string bodyLines)
 	std::string headers_and_body = bodyLines.substr(start + boundary.length(), end - start - boundary.length());
 	std::string headers = headers_and_body.substr(0, headers_and_body.find(std::string("\r\n") + std::string("\r\n")));
 	std::string body = headers_and_body.substr(headers_and_body.find(std::string("\r\n") + std::string("\r\n")) + 4);
-	std::size_t filename_start = headers.find("name=");
+	std::size_t filename_start = headers.find("filename=");
+
+    std::cout << "\n   X---X\n";
+    std::cout << headers_and_body << "\n   X---X\n";
+    std::cout << headers << "\n   X---X\n";
+    std::cout << body << "\n   X---X\n";
+
 	if (filename_start == std::string::npos)
 	{
         std::cout << "other\n";
 		status = 400; // Bad Request
 		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");
 	}
-	std::size_t filename_end = headers.find('"', filename_start + 6);
-	post_file_name = headers.substr(filename_start + 6, filename_end - filename_start - 6);
+	std::size_t filename_end = headers.find('"', filename_start + 10);
+	post_file_name = headers.substr(filename_start + 10, filename_end - filename_start - 10);
 
-	post_file_content = body.substr(0, body.length() - 2);
+	post_file_content = body.substr(0, body.length() - 2);*/
 }
 
 std::map<std::string, std::string> Part_C::parseUrlEncoded(const std::string& data)
