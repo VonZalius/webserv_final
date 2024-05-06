@@ -111,7 +111,7 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
 
     final_status(config);
 
-    if (isCGI())
+    if (isCGI() && (status == 200 || status == 201))
         httpResponse = "HTTP/1.1 " + toString(status) + " " + _statusCodes[status] + "\r\n" +
            "Content-Length: " + toString(cgi_content.length()) + "\r\n" +
            "Content-Type: text/html; charset=UTF-8\r\n" +  // Assurez-vous d'inclure Content-Type si nécessaire
