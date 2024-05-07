@@ -109,8 +109,8 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
 	}
     if (!isExtensionAllowed(uri))
     {
-        status = 400;
-		throw Part_C::InvalidRequestException("Error HttpVersion 400");
+        status = 404;
+		throw Part_C::InvalidRequestException("Error HttpVersion 404");
     }
 
 
@@ -166,6 +166,7 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
         if(headers["Content-Type"].find("multipart/form-data") != std::string::npos)
         {
             std::cout << "\n-----> Body form multipart/form-data\n";
+            parseMultiPartBody(potential_body);
         }
         else if(headers["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
         {
@@ -275,7 +276,8 @@ void Part_C::parseMultiPartBody(std::string bodyLines)
         lastPos = partEnd;
     }
 
-    for (std::vector<FormData>::iterator it = formDataParts.begin(); it != formDataParts.end(); ++it) {
+    for (std::vector<FormData>::iterator it = formDataParts.begin(); it != formDataParts.end(); ++it)
+    {
         std::size_t fnPos = it->headers.find("filename=\"");
         if (fnPos != std::string::npos) {
             fnPos += 10; // Skip 'filename="'
@@ -287,11 +289,10 @@ void Part_C::parseMultiPartBody(std::string bodyLines)
         }
     }
 
-    if (!post_file_name.empty()) {
         std::cout << "XXX File Name: " << post_file_name << "\n";
         std::cout << "XXX File Content:\n" << post_file_content << "\n";
-    }
-    else
+
+    if (post_file_name.empty())
     {
         status = 400; // Bad Request
 		throw Part_C::InvalidRequestException("Error Parse Multi Part Body 400");

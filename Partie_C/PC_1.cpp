@@ -80,7 +80,7 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
             method_DELETE();
         else if(isCGI())
             execute_cgi();
-        else if(method == "GET" || post_file_name.empty() || post_file_content.empty())
+        else if(method == "GET" )
             method_GET();
         else if(method == "POST")
             method_POST();
