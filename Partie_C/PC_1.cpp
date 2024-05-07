@@ -19,25 +19,6 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
     config.error_pages = error_pages;
     config.routes = routes;
 
-    //init test
-    /*config.server_name = "sitetest.com";
-    config.port = 3003;
-    config.client_max_body_size = 20480;*/
-
-    //config.error_pages[404] = "webpage/error_pages/error404.html";
-    //config.error_pages[405] = "webpage/error_pages/error405.html";
-
-    /*std::map<std::string, std::string> details1;
-    details1["index"] = "index.html";
-    details1["methods"] = "GET POST";
-    details1["root"] = "./webpage/sitetest/index.html";
-    config.routes["/"] = details1;*/
-
-    /*std::map<std::string, std::string> details2;
-    details2["methods"] = "GET";
-    details2["redirection"] = "https://signin.intra.42.fr";
-    config.routes["intra42"] = details2;*/
-
     init();
     status = 200;
 
@@ -51,11 +32,37 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
     char request_buffer[bufferSize] = {0};
 
     // Lecture de la requête du client
-    int bytesReceived = read(client_socket, request_buffer, bufferSize - 1);
-    if (bytesReceived < 1)
-    {
-        std::cout << "Erreur de lecture ou connexion fermée par le client." << std::endl;
+    int bytesReceived = 0;
+    int totalBytesRead = 0;
+    memset(request_buffer, 0, bufferSize);  // Nettoyer le buffer
+
+    while (totalBytesRead < bufferSize - 1) {  // Assurer que l'on ne déborde pas le buffer
+        bytesReceived = read(client_socket, request_buffer + totalBytesRead, bufferSize - 1 - totalBytesRead);
+        if (bytesReceived > 0) {
+            totalBytesRead += bytesReceived;
+            request_buffer[totalBytesRead] = '\0';  // Assurer que le buffer est toujours null-terminated
+
+            // Vérifier si la fin des headers HTTP a été reçue
+            if (strstr(request_buffer, "\r\n\r\n") != NULL) {
+                break; // Fin des headers HTTP détectée
+            }
+        } else if (bytesReceived == 0) {
+            std::cout << "La connexion a été fermée par le client." << std::endl;
+            return; // Connexion fermée par le client, sortie de la fonction
+        } else {
+            std::cerr << "Erreur de lecture." << std::endl;
+            return; // Erreur lors de la lecture des données
+        }
+    }
+
+    // Contrôle après sortie de la boucle
+    if (bytesReceived <= 0) {
+        std::cerr << "Aucune donnée valide reçue ou connexion fermée prématurément." << std::endl;
         return;
+    }
+
+    if (strstr(request_buffer, "\r\n\r\n") == NULL) {
+        std::cerr << "Les headers HTTP complets n'ont pas été reçus, même si les données ont été lues." << std::endl;
     }
 
 
@@ -73,7 +80,7 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
             method_DELETE();
         else if(isCGI())
             execute_cgi();
-        else if(method == "GET")
+        else if(method == "GET" || post_file_name.empty() || post_file_content.empty())
             method_GET();
         else if(method == "POST")
             method_POST();
@@ -95,7 +102,7 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
 
     std::cout << requestURI << std::endl;
 
-    if (method == "GET")
+    if (method == "GET" && status < 300)
     {
         if (!fileStream.is_open())
         {

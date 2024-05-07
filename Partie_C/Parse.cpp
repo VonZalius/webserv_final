@@ -39,6 +39,39 @@ void printMap(const std::map<std::string, std::string>& post_file_map) {
     }
 }
 
+bool isExtensionAllowed(const std::string& uri)
+{
+// Tableau des extensions de fichier autorisées
+    const char* allowedExtensions[] = {".html", ".css", ".js", ".jpg", ".png", ".txt", ".json", ".pl"};
+    const int numExtensions = 7; // Nombre d'extensions dans le tableau
+
+    // Trouver la dernière occurrence du slash dans l'URI pour délimiter le début du nom du fichier
+    std::size_t lastSlashPos = uri.rfind('/');
+
+    // Trouver la dernière occurrence du point dans l'URI après le dernier slash
+    std::size_t lastDotPos = uri.rfind('.');
+    if (lastDotPos == std::string::npos || lastDotPos < lastSlashPos) {
+        return true;  // Aucune extension ou le point est avant le dernier slash (partie du chemin)
+    }
+
+    // Vérifier si le point est à la fin de l'URI
+    if (lastDotPos == uri.length() - 1) {
+        return true;  // Extension vide est considérée comme absence d'extension
+    }
+
+    // Extraire l'extension du fichier
+    std::string extension = uri.substr(lastDotPos);
+
+    // Parcourir le tableau d'extensions autorisées pour vérifier si l'extension est autorisée
+    for (int i = 0; i < numExtensions; i++) {
+        if (extension == allowedExtensions[i]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Part_C::parse(const std::string& requestText, s_server2& config)
 {
     std::istringstream requestStream(requestText);
@@ -51,8 +84,8 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
     }
     if (method != "GET" && method != "POST" && method != "DELETE")
 	{
-		status = 501;
-		throw Part_C::InvalidRequestException("Error Method 501");
+		status = 405;
+		throw Part_C::InvalidRequestException("Error Method 405");
 	}
     if (!areAllPathCharactersValid(uri))
 	{
@@ -74,6 +107,12 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
 		status = 505;
 		throw Part_C::InvalidRequestException("Error HttpVersion 505");
 	}
+    if (!isExtensionAllowed(uri))
+    {
+        status = 400;
+		throw Part_C::InvalidRequestException("Error HttpVersion 400");
+    }
+
 
     // Parse des en-têtes
     while (std::getline(requestStream, line))
@@ -127,10 +166,6 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
         if(headers["Content-Type"].find("multipart/form-data") != std::string::npos)
         {
             std::cout << "\n-----> Body form multipart/form-data\n";
-            /*std::map<std::string, std::string> post_file_map = */parseMultiPartBody(potential_body);
-            /*printMap(post_file_map);
-            post_file_name = post_file_map["filename"];
-            post_file_content = post_file_map["content"];*/
         }
         else if(headers["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
         {
@@ -139,6 +174,12 @@ void Part_C::parse(const std::string& requestText, s_server2& config)
             printMap(post_file_map);
             post_file_name = post_file_map["filename"];
             post_file_content = post_file_map["content"];
+        }
+        else if(headers["Content-Type"].find("test/file") != std::string::npos)
+        {
+            std::cout << "\n-----> ERROR hehe\n\n";
+            status = 405;
+            throw Part_C::InvalidRequestException("Error Body 405");
         }
         else
         {
