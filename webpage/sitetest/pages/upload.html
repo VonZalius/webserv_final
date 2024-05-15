@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autre page</title>
-    <link rel="stylesheet" href="../styles.css">
+    <title>Upload page</title>
+	<link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-    <h1>Autre page</h1>
+    <h1>Upload Page</h1>
 
-    <p>C'est inutile, mais, on est bien dans une nouvelle page !</p>
+	<form action="/" method="post" enctype="multipart/form-data" class="form-container">
+		<input type="file" name="fileToUpload" id="fileToUpload">
+		<input type="submit" name="submit" value="Upload file">
+	</form>
 
 	<div class="button-container">
 		<button class="btn btn-other" onclick="window.location.href='../index.html'">Retour sur l'index</button>
