@@ -28,7 +28,7 @@ Part_C::Part_C(int client_socket, std::string server_name, int port, size_t clie
     //-------------------- Partie Request --------------------
     std::cout << "----> BASEPATH : " << basePath <<"\n";
 
-    const int bufferSize = 1024;
+    const int bufferSize = 30000;
     char request_buffer[bufferSize] = {0};
 
     // Lecture de la requête du client
@@ -146,8 +146,8 @@ void Part_C::final_status(s_server2& config)
 {
     if (status != 200 && status != 201)
     {
-        if (status == 404 || status == 405)
-        {
+        if (/*status == 400 || status == 403 || */status == 404 || status == 405/*  || status == 500 || status == 502 || status == 503*/)
+        {    
             std::string filePath = "./" + config.error_pages[status];
             std::ifstream fileStream(filePath.c_str());
 
@@ -160,7 +160,7 @@ void Part_C::final_status(s_server2& config)
         else
         {
             contentType = "text/plain";
-            content = toString(status) + " : " + _statusCodes[status];
+            content = toString(status) + " : " + _statusCodes[status] + "\nyep its custom mazafaka (from Zalius, pls dont hurt us we are good friend :D)";
         }
     }
 }

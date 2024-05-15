@@ -43,7 +43,7 @@ bool isExtensionAllowed(const std::string& uri)
 {
 // Tableau des extensions de fichier autorisées
     const char* allowedExtensions[] = {".html", ".css", ".js", ".jpg", ".png", ".txt", ".json", ".pl"};
-    const int numExtensions = 7; // Nombre d'extensions dans le tableau
+    const int numExtensions = 8; // Nombre d'extensions dans le tableau
 
     // Trouver la dernière occurrence du slash dans l'URI pour délimiter le début du nom du fichier
     std::size_t lastSlashPos = uri.rfind('/');
