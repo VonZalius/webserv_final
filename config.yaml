@@ -1,6 +1,19 @@
 - server:
+    server_name: wesitenul1.com
+    port: 3001
+    client_max_body_size: 20k
+    error_pages:
+    - 404: webpage/error_pages/error404.html
+    - 405: webpage/error_pages/error405.html
+    routes:
+      - /:
+          methods: GET POST
+          root: ./webpage/websitenul1
+          index: index.html
+
+- server:
     server_name: websitenul2.com
-    port: 3008
+    port: 3002
     client_max_body_size: 20k
     error_pages:
     - 404: webpage/error_pages/error404.html
@@ -10,13 +23,10 @@
           methods: GET POST
           root: ./webpage/websitenul2
           index: index.html
-      - /intra42:
-          methods: GET
-          redirection: https://signin.intra.42.fr
 
 - server:
-    server_name: wesitenul3.com
-    port: 3009
+    server_name: superwebsite.com
+    port: 3003
     client_max_body_size: 20k
     error_pages:
     - 404: webpage/error_pages/error404.html
@@ -24,23 +34,7 @@
     routes:
       - /:
           methods: GET POST
-          root: ./webpage/websitenul3
-          index: index.html
-      - /intra42:
-          methods: GET
-          redirection: https://signin.intra.42.fr
-
-- server:
-    server_name: sitetest.com
-    port: 3002
-    client_max_body_size: 20k
-    error_pages:
-    - 404: webpage/error_pages/error404.html
-    - 405: webpage/error_pages/error405.html
-    routes:
-      - /:
-          methods: GET POST
-          root: ./webpage/sitetest
+          root: ./webpage/superwebsite
           index: index.html
       - /intra42:
           methods: GET
