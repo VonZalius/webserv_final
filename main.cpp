@@ -9,6 +9,7 @@
 // Création d'une instance de serveur
 Server server;
 
+/* Impression du parsing
 void print_struct_vals(const std::vector<t_server>& servers)
 {
 	for (size_t i = 0; i < servers.size(); ++i)
@@ -32,6 +33,7 @@ void print_struct_vals(const std::vector<t_server>& servers)
 		std::cout << std::endl << "........................." << std::endl << std::endl;
 	}
 }
+*/
 
 void signal_handler(int signal)
 {
@@ -61,9 +63,11 @@ int main(int argc, char *argv[])
 	{
 		ConfigCheck		config(config_file);
 		ConfigParse		parse(config);
-		std::cout << "--------------------------------------------------" << std::endl << std::endl;
-		print_struct_vals(parse.getServersParsed());
-		std::cout << "--------------------------------------------------" << std::endl << std::endl;
+
+		// Impression du parsing
+		//std::cout << "--------------------------------------------------" << std::endl << std::endl;
+		//print_struct_vals(parse.getServersParsed());
+		//std::cout << "--------------------------------------------------" << std::endl << std::endl;
 
 		// Initialisation du serveur avec les données parsées du fichier de configuration
 		initializeServer(server, parse.getServersParsed());

@@ -11,6 +11,12 @@ h1
     text-align: center;
 }
 
+.h1-success
+{
+    color: rgb(13, 255, 0);
+    text-align: center;
+}
+
 p
 {
     color: #f00;
@@ -36,6 +42,39 @@ p
     transition: background-color 0.3s ease;
 }
 
+.btn-upload
+{
+    background-color: #00ff5994;
+    color: white;
+}
+
+.btn-upload:hover
+{
+    background-color: #00ff5961;
+}
+
+.btn-cgi
+{
+    background-color: #783cd9;
+    color: white;
+}
+
+.btn-cgi:hover
+{
+    background-color: #783cd96a;
+}
+
+.btn-cgi2
+{
+    background-color: #bb47b0;
+    color: white;
+}
+
+.btn-cgi2:hover
+{
+    background-color: #bb47af7a;
+}
+
 .btn-youtube
 {
     background-color: #ff0000;
@@ -49,36 +88,42 @@ p
 
 .btn-other
 {
-    background-color: #007bff;
+    background-color: #646f7b;
     color: white;
 }
 
 .btn-other:hover
 {
-    background-color: #0056b3;
+    background-color: #51575d;
 }
 
-.btn-upload
-{
-    background-color: #28a745;
+.form-container {
+    text-align: center;
+    margin: 0 auto;
+}
+
+.file-input-btn {
+    background-color: #ffcc00;
     color: white;
-}
-
-.btn-upload:hover
-{
-    background-color: #218838;
-}
-
-.form-container
-{
-    display: flex;
-    flex-direction: row;
-	justify-content: center;
-    align-items: center;
-    margin-top: 50px;
-}
-
-.form-container input
-{
+    border: none;
+    border-radius: 5px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+	font-size: 18px;
     margin: 0 10px;
+}
+
+.file-input-btn:hover {
+    background-color: #ffcc009a;
+}
+
+.file-display-text {
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    border: none;
+    background-color: transparent;
+    outline: none;
+	margin: inherit;
 }
