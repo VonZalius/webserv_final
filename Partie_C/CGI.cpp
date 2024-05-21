@@ -1,5 +1,9 @@
 #include "PC_1.hpp"
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 bool Part_C::isCGI()
 {
     std::string::size_type dotIndex = uri.find_last_of('.');
@@ -17,14 +21,24 @@ bool Part_C::isCGI()
 
 std::string getExecutableParentDir()
 {
-char path[PATH_MAX];
-    char realPath[PATH_MAX];  // Pour contenir le chemin absolu résolu
-    ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
+    char path[PATH_MAX];
+    char realPath[PATH_MAX]; // Pour contenir le chemin absolu résolu
+    ssize_t count = -1;
+
+    // Essayez d'obtenir le chemin de l'exécutable pour Linux
+    count = readlink("/proc/self/exe", path, PATH_MAX);
     if (count == -1) {
-        std::cerr << "Erreur lors de l'obtention du chemin de l'exécutable" << std::endl;
-        return "";
+        // Si la méthode Linux échoue, essayez macOS
+#ifdef __APPLE__
+        uint32_t size = PATH_MAX;
+        if (_NSGetExecutablePath(path, &size) != 0) {
+            std::cerr << "Erreur lors de l'obtention du chemin de l'exécutable" << std::endl;
+            return "";
+        }
+#endif
+    } else {
+        path[count] = '\0'; // Termine la chaîne avec un caractère nul
     }
-    path[count] = '\0';  // Termine la chaîne avec un caractère nul
 
     // Résolution du chemin absolu
     if (realpath(path, realPath) == NULL) {
