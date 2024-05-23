@@ -81,7 +81,12 @@ void	ConfigParse::parseInfos(std::string server)
 		if (line.find("server_name: ") != std::string::npos)
 			data.server_name = parseServerName(line);
 		else if (line.find("port: ") != std::string::npos)
-			data.port = parsePort(line);
+		{
+            data.port = parsePort(line);
+            if (std::find(used_ports.begin(), used_ports.end(), data.port) != used_ports.end())
+                throw std::invalid_argument("Port " + std::to_string(data.port) + " is already in use by another server");
+            used_ports.push_back(data.port);
+        }
 		else if (line.find("client_max_body_size: ") != std::string::npos)
 			data.client_max_body_size = parseBodySize(line);
 		else if (line.find("error_pages:\0") != std::string::npos)
